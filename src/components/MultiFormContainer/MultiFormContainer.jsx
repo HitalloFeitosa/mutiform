@@ -1,23 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import FormFields from "../FormFields/FormFields";
-import { useFormValues } from '../../hooks/useFormValues';
 
 const MultiFormContainer = () => {
   const [forms, setForms] = useState([{ id: Date.now() }]);
   const [allFormData, setAllFormData] = useState([]);
-  const form = useForm();
-
-  // Get form values using the custom hook
-  const formValues = useFormValues(form);
 
   const handleAddForm = () => {
     setForms([...forms, { id: Date.now() }]);
-  };
-
-  const handleSubmitForm = (formId, data) => {
-    console.log(`Form data for form ${formId}:`, data);
-    setAllFormData((prevData) => [...prevData, { formId, data }]);
   };
 
   const handleSubmitAll = () => {
@@ -26,25 +16,36 @@ const MultiFormContainer = () => {
 
   return (
     <div>
-      <button onClick={handleAddForm}>Add New Form</button>
       {forms.map((form) => (
         <SingleForm
           key={form.id}
           formId={form.id}
-          onSubmitForm={handleSubmitForm}
+          onFormDataChange={(data) => {
+            setAllFormData((prevData) => {
+              const updatedData = prevData.filter(item => item.formId !== form.id);
+              return [...updatedData, { formId: form.id, data }];
+            });
+          }}
         />
       ))}
-      <button onClick={handleSubmitAll}>Submit All</button>
+      <div>
+        <button onClick={handleAddForm}>Add New Form</button>
+        <button onClick={handleSubmitAll}>Submit All</button>
+      </div>
     </div>
   );
 };
 
-// Single form component
-const SingleForm = ({ formId, onSubmitForm }) => {
-  const { control, handleSubmit, formState: { errors } } = useForm();
+const SingleForm = ({ formId, onFormDataChange }) => {
+  const { control, handleSubmit, watch, formState: { errors } } = useForm();
+  const formValues = watch();
+
+  useEffect(() => {
+    onFormDataChange(formValues);
+  }, [formValues, onFormDataChange]);
 
   const onSubmit = (data) => {
-    onSubmitForm(formId, data);
+    console.log("Form data submitted:", data);
   };
 
   return (
