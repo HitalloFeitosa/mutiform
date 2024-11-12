@@ -1,13 +1,17 @@
-// src/hooks/useFormValues.jsx
-
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 
 export function useFormValues(form) {
-  useEffect(() => {
-    const values = form.watch();
-    console.log('All form values:', values);
-  }, [form.watch]);
+  const [values, setValues] = useState({});
 
-  return null;
+  useEffect(() => {
+    const subscription = form.watch((newValues) => {
+      setValues(newValues); // Update the state with the new form values
+      console.log('All form values:', newValues);
+    });
+
+    return () => subscription.unsubscribe(); // Cleanup subscription
+  }, [form]);
+
+  return values; // Return the form values
 }
